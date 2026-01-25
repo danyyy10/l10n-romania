@@ -66,33 +66,104 @@
                     </t>
                 </div>
                 <br />
-                <div id="sold" style="font-weight: bold">
-                    <span>Partner balance: </span>
-                    <t t-set="doc" t-value="o" />
-                    <t t-if="date_to">
-                        <t t-set="doc" t-value="o.with_context(date_to=date_to)" />
+                <t t-set="pdata" t-value="partners_data[0] if partners_data else None" />
+                <t t-if="pdata">
+                    <!-- AVANSURI DESCHISE Section -->
+                    <t t-if="pdata['advances']">
+                        <div id="advances_section" style="margin-bottom: 20px;">
+                            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">
+                                AVANSURI DESCHISE (408/418 - Avansuri clienți/furnizori)
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: left; font-weight: bold;">Tip Document</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">Cod Cont</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">Sumă (fără TVA)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="pdata['advances']" t-as="advance">
+                                        <tr>
+                                            <td style="border: 1px solid black; padding: 8px;"><span t-esc="advance['name']" /></td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: center;">
+                                                <span t-esc="advance['account_code']" /> - <span t-esc="advance['account_name']" />
+                                            </td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: right;">
+                                                <span t-esc="advance['amount_residual']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr>
+                                        <td colspan="2" style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">TOTAL AVANSURI:</td>
+                                        <td style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">
+                                            <span t-esc="pdata['total_advances']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </t>
-                    <t t-if="type == 'all' or not type">
-                        <span
-                            t-esc="doc.credit + doc.debit"
-                            t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'
-                        />
+
+                    <!-- FACTURI DESCHISE Section -->
+                    <t t-if="pdata['invoices']">
+                        <div id="invoices_section" style="margin-bottom: 20px;">
+                            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">
+                                FACTURI DESCHISE
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                                <thead>
+                                    <tr>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: left; font-weight: bold;">Tip Document</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">Nr. Document</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: center; font-weight: bold;">Data</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">Suma Inițială</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">Plătit</th>
+                                        <th style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">Balanță</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="pdata['invoices']" t-as="invoice">
+                                        <tr>
+                                            <td style="border: 1px solid black; padding: 8px;"><span t-esc="invoice['move_type']" /></td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: center;"><span t-esc="invoice['name']" /></td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: center;">
+                                                <span t-esc="invoice['date']" t-options='{"widget": "date"}' />
+                                            </td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: right;">
+                                                <span t-esc="invoice['amount_total']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                            </td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: right;">
+                                                <span t-esc="invoice['paid_amount']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                            </td>
+                                            <td style="border: 1px solid black; padding: 8px; text-align: right;">
+                                                <span t-esc="invoice['amount_residual']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr>
+                                        <td colspan="3" style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">TOTAL FACTURI:</td>
+                                        <td style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">
+                                            <span t-esc="sum(inv['amount_total'] for inv in pdata['invoices'])" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                        </td>
+                                        <td style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">
+                                            <span t-esc="sum(inv['paid_amount'] for inv in pdata['invoices'])" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                        </td>
+                                        <td style="border: 1px solid black; padding: 8px; text-align: right; font-weight: bold;">
+                                            <span t-esc="pdata['total_invoices']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </t>
-                    <t t-if="type == 'client'">
-                        <span
-                            t-esc="doc.credit"
-                            t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'
-                        />
-                    </t>
-                    <t t-if="type == 'supplier'">
-                        <span
-                            t-esc="doc.debit"
-                            t-options='{"widget": "monetary", "display_currency": res_company.currency_id}'
-                        />
-                    </t>
-<!--                    <span t-field="doc.credit" />-->
-<!--                    <span>Partner balance: </span><span t-field="o.credit" />-->
-                </div>
+
+                    <!-- BALANȚĂ TOTALĂ Section -->
+                    <div id="total_balance" style="margin-top: 20px; padding: 10px; background-color: #f0f0f0; font-weight: bold; font-size: 1.05rem;">
+                        <span>BALANȚĂ TOTALĂ: </span>
+                        <span t-esc="pdata['total_balance']" t-options='{"widget": "monetary", "display_currency": res_company.currency_id}' />
+                    </div>
+                </t>
                 <div id="text2" style="font-size: 0.85rem;">
                     Vă rugăm ca în termen de 5 zile de la primire, să ne restituiți acest extras confirmat pentru suma
                     acceptată, iar în cazul constatării de diferențe să anexați o notă explicativă cuprinzând obiecțiile

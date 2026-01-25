@@ -13,6 +13,7 @@ class BalanceConfirm(models.TransientModel):
     l10n_ro_balance_type = fields.Selection(
         selection=[("supplier", "Furnizor"), ("client", "Client"), ("all", "Toate")], default="client", string="Tip"
     )
+    send_email = fields.Boolean(string="Send by Email", default=False)
 
     def action_print_balance(self):
         partners = self.env["res.partner"].browse(self.env.context.get("active_ids"))
@@ -34,6 +35,26 @@ class BalanceConfirm(models.TransientModel):
             "date_to": self.l10n_ro_balance_date,  # acesta este critic!
             "type": self.l10n_ro_balance_type,
         }
+        
+        # Handle email sending
+        if self.send_email:
+            template = self.env.ref("l10n_ro_balance_confirmation.mail_template_balance_confirmation")
+            # Open mail composer with template pre-selected
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "mail.compose.message",
+                "view_mode": "form",
+                "target": "new",
+                "context": {
+                    "default_composition_mode": "mass_mail",
+                    "default_partner_ids": partners.ids,
+                    "default_template_id": template.id,
+                    "default_model": "res.partner",
+                    "date_to": self.l10n_ro_balance_date,
+                    "type": self.l10n_ro_balance_type,
+                },
+            }
+        
         # action = action.with_context(date_to=self.l10n_ro_balance_date)
         # pylint: disable=W8121
         return action.with_context(cleaned_context).report_action(
